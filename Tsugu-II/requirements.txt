@@ -1,8 +1,0 @@
-flask==2.3.3
-requests==2.31.0
-beautifulsoup4==4.12.2
-lxml==4.9.3; sys_platform != 'win32'
-# 在Windows上使用更简单的HTML解析器
-html5lib==1.1
-python-dotenv==1.0.0
-apscheduler==3.10.4
