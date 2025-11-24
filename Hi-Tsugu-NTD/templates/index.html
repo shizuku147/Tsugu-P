@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>茨菇bot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-chart-line"></i> Tsugu <span class="demo-badge">じ————————————</span></h1>
+            <p>关注Afterglow喵~</p>
+            <div class="demo-notice">
+                <i class="fas fa-info-circle"></i>
+                演示模式：价格数据为模拟生成，每30秒自动更新
+                <button id="resetDemo" class="btn btn-outline">重置数据</button>
+            </div>
+        </header>
+
+        <!-- 添加商品表单 -->
+        <div class="add-product-section card">
+            <h2><i class="fas fa-plus-circle"></i> 添加追踪商品</h2>
+            <form id="addProductForm" class="product-form">
+                <div class="form-group">
+                    <label for="productName">商品名称：</label>
+                    <input type="text" id="productName" name="name" 
+                           placeholder="输入商品名称">
+                </div>
+                <div class="form-group">
+                    <label for="productUrl">商品链接：</label>
+                    <input type="url" id="productUrl" name="url" 
+                           placeholder="输入商品链接" required>
+                </div>
+                <div class="form-group">
+                    <label for="targetPrice">目标价格：</label>
+                    <input type="number" id="targetPrice" name="target_price" 
+                           placeholder="期望价格" step="0.01" min="0">
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> 添加商品
+                </button>
+            </form>
+            <div id="formMessage" class="message"></div>
+        </div>
+
+        <!-- 商品列表 -->
+        <div class="products-section card">
+            <div class="section-header">
+                <h2><i class="fas fa-list"></i> 追踪商品</h2>
+                <div class="section-actions">
+                    <span class="product-count" id="productCount">0 个商品</span>
+                    <button id="refreshProducts" class="btn btn-secondary">
+                        <i class="fas fa-sync-alt"></i> 刷新
+                    </button>
+                </div>
+            </div>
+            
+            <div id="productsList" class="products-grid">
+                {% for product in products %}
+                <div class="product-card" data-product-id="{{ product[0] }}">
+                    <div class="product-image">
+                        <img src="{{ product[5] or 'https://picsum.photos/300/200' }}" alt="{{ product[1] }}">
+                        <div class="product-badge">{{ product[6] or '商品' }}</div>
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name">{{ product[1] }}</div>
+                        <div class="product-url">{{ product[2][:50] }}...</div>
+                        
+                        <div class="price-section">
+                            <div>
+                                <div class="current-price">¥{{ "%.2f"|format(product[3]) if product[3] else '--' }}</div>
+                                <div class="target-price">
+                                    目标: ¥{{ "%.2f"|format(product[4]) if product[4] else '未设置' }}
+                                    {% if product[3] and product[4] and product[3] <= product[4] %}
+                                    <span class="price-reached">✓ 已达到</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="product-actions">
+                            <button class="btn btn-primary btn-check-price">
+                                <i class="fas fa-sync"></i> 检查价格
+                            </button>
+                            <button class="btn btn-secondary btn-history">
+                                <i class="fas fa-chart-line"></i> 历史
+                            </button>
+                            <button class="btn btn-danger btn-delete">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div id="emptyState" class="empty-state" {% if products %}style="display: none;"{% endif %}>
+                <i class="fas fa-shopping-basket"></i>
+                <h3>还没有添加商品</h3>
+                <p>添加第一个商品开始追踪价格吧！</p>
+            </div>
+        </div>
+
+        <!-- 价格历史模态框 -->
+        <div id="historyModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>价格历史</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="chartContainer">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                    <div id="historyTableContainer">
+                        <table id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>日期</th>
+                                    <th>价格</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载动画 -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>加载中...</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
